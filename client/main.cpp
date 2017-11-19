@@ -7,9 +7,9 @@ using namespace std;
 
 int main(int argc, char **argv) {
 	
-	string text = "hello # world";
+	string text = "hello ## wo#rld";
 
-	Message message = Message(text, false, false);
+	Message message = Message(text, true, true);
 	cout << message.encode() << endl;
 	
 	return 0;
