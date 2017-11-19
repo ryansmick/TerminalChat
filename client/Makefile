@@ -1,6 +1,6 @@
 all: TerminalChatClient
 
-TerminalChatClient: main.cpp message.o
+TerminalChatClient: main.cpp ../message.o ../tcp_connection.o
 	g++ -Wall -std=gnu++11 $^ -o $@
 
 *.o: *.cpp

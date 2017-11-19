@@ -4,6 +4,8 @@
 #include <sys/socket.h>
 #include <string>
 
+#include "message.h"
+
 using namespace std;
 
 // Class to represent the tcp connection
@@ -53,7 +55,7 @@ class TCPConnection {
 		// Public functions to send and receive data
 		void send_message(Message message);
 		bool is_message_available();
-		Message* get_latest_message();
+		Message& get_latest_message();
 		void pop_latest_message();
 
 		// Close the connection

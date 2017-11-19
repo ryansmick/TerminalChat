@@ -1,7 +1,7 @@
 // TCP Client
 
 #include <iostream>
-#include "message.h"
+#include "../message.h"
 
 using namespace std;
 
