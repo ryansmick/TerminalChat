@@ -1,5 +1,9 @@
 // TCP Connection Class Definition
 
+#ifndef TCP_CONNECTION_H
+#define TCP_CONNECTION_H
+
+
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <string>
@@ -16,18 +20,13 @@ class TCPConnection {
 		char *buf;
 		int buf_size;
 
-		// client data members
-		int client_socket;
+		// connection data members
+		int data_socket;
 		char *host;
 		struct hostent *hp;
 		struct sockaddr_in client_addr;
-		socklen_t client_addr_size;
+		bool is_connected;
 
-		// server data members
-		int connection_socket;
-		int data_socket;
-		struct sockaddr_in server_addr;
-		
 		// String utility functions
 		string c_to_cpp_string(char* buf);
 		string rstrip(string str);
@@ -37,20 +36,24 @@ class TCPConnection {
 
 		// Client connection utility functions
 		void client_connect_socket();
+
+		// Delimiter for messages
+		const static char message_delimiter = '|';
 		
-		// Server connection utility functions
-		void server_bind_socket();
-		void server_listen_socket();
-		void server_accept_connection();
+		// Send and receive utility functions
+		void send_message(string s);
+		string encode_message(string message_string);
+		//string decode_message(string encoded_string);
+		//void populate_message_queue();
 
 	public:
 
 		// Constructor
 		TCPConnection();
+		TCPConnection(int data_socket);
 
 		// Set up the connection
 		void start_client(char *host, char *port);
-		void start_server(char *port);
 	
 		// Public functions to send and receive data
 		void send_message(Message message);
@@ -61,3 +64,5 @@ class TCPConnection {
 		// Close the connection
 		void close_socket();
 };
+
+#endif
