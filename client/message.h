@@ -15,9 +15,9 @@ class Message {
 		string message_text; // The body of the message
 		bool is_command; // Is the message a command or data
 		bool is_prompted; // Whether or not the message was received in response to a previous message
-		char encode_delimiter;
-		char boolean_true_encoding;
-		char boolean_false_encoding;
+		const static char encode_delimiter = '#';
+		const static char boolean_true_encoding = 'T';
+		const static char boolean_false_encoding = 'F';
 
 	public:
 
@@ -25,7 +25,7 @@ class Message {
 
 		// Encode and decode messages
 		string encode();
-		static Message* decode(string encoded_message);
+		static Message& decode(string encoded_message);
 
 		// Getters and setters
 		string get_message_text();

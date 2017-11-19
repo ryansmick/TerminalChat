@@ -10,10 +10,6 @@ Message::Message(string message_text, bool is_command, bool is_prompted) {
 	this->is_command = is_command;
 	this->is_prompted = is_prompted;
 
-	this->encode_delimiter = '#';
-	this->boolean_true_encoding = 'T';
-	this->boolean_false_encoding = 'F';
-
 }
 
 string Message::encode() {
@@ -52,4 +48,47 @@ string Message::encode() {
 
 	return encoded_string;
 
+}
+
+Message& Message::decode(string encoded_message) {
+
+	string text = encoded_message.substr(0, encoded_message.length() - 4);
+	bool is_command = encoded_message.at(encoded_message.length() - 3) == boolean_true_encoding ? true : false;
+	bool is_prompted = encoded_message.at(encoded_message.length() - 1) == boolean_true_encoding ? true : false;
+
+	// Remove the extra delimiters from the string
+	for(size_t i = 0; i < text.length()-1; i++) {
+		if(text.at(i) == encode_delimiter && text.at(i+1) == encode_delimiter) {
+			text.erase(i+1, 1);
+		}
+	}
+
+	Message* new_message = new Message(text, is_command, is_prompted);
+
+	return *new_message;
+
+}
+
+string Message::get_message_text() {
+	return this->message_text;
+}
+
+bool Message::get_is_command() {
+	return this->is_command;
+}
+
+bool Message:: get_is_prompted() {
+	return this->is_prompted;
+}
+
+void Message::set_message_text(string new_message_text) {
+	this->message_text = new_message_text;
+}
+
+void Message::set_is_command(bool is_command) {
+	this->is_command = is_command;
+}
+
+void Message::set_is_prompted(bool is_prompted) {
+	this->is_prompted = is_prompted;
 }
