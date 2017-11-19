@@ -1,5 +1,8 @@
 // TCP Connection Class Definition
 
+#ifndef TCPCONNECTION
+#define TCPCONNECTION
+
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <string>
@@ -61,3 +64,5 @@ class TCPConnection {
 		// Close the connection
 		void close_socket();
 };
+
+#endif

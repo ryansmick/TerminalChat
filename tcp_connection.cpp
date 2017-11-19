@@ -109,3 +109,7 @@ void TCPConnection::start_server(char *port) {
 	server_listen_socket();
 	server_accept_connection();
 }
+
+
+void TCPConnection::send_message(Message m) {
+}
