@@ -6,15 +6,6 @@
 
 using namespace std;
 
-
-// Struct to represent a message sent over the tcp connection
-struct Message {
-	string message_text; // The body of the message
-	bool is_command; // Is the message a command or data
-	bool is_prompted; // Whether or not the message was received in response to a previous message
-};
-
-
 // Class to represent the tcp connection
 class TCPConnection {
 
@@ -22,24 +13,31 @@ class TCPConnection {
 		
 		char *buf;
 		int buf_size;
-		int sockfd;
+
+		// client data members
+		int client_socket;
 		char *host;
 		struct hostent *hp;
-		struct sockaddr_in sin;
+		struct sockaddr_in client_addr;
 		socklen_t client_addr_size;
+
+		// server data members
+		int connection_socket;
+		int data_socket;
+		struct sockaddr_in server_addr;
 		
 		// String utility functions
 		string c_to_cpp_string(char* buf);
 		string rstrip(string str);
 
 		// Open a socket on client or server
-		void open_socket();
+		void open_socket(int &sockfd);
 
 		// Client connection utility functions
 		void client_connect_socket();
 		
 		// Server connection utility functions
-		void server_bind_socket()
+		void server_bind_socket();
 		void server_listen_socket();
 		void server_accept_connection();
 
@@ -49,8 +47,8 @@ class TCPConnection {
 		TCPConnection();
 
 		// Set up the connection
-		void start_client();
-		void start_server();
+		void start_client(char *host, char *port);
+		void start_server(char *port);
 	
 		// Public functions to send and receive data
 		void send_message(Message message);
