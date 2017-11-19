@@ -6,6 +6,8 @@
 #include <unistd.h>
 
 #include "tcp_connection.h"
+#include "message.h"
+
 using namespace std;
 
 // Convert a c string into a cpp string and return the cpp string
@@ -33,48 +35,25 @@ void TCPConnection::open_socket(int &sockfd) {
 	}
 };
 
-TCPConnection::TCPConnection() {}
+TCPConnection::TCPConnection() {
+	this->is_connected = false;
+}
+
+TCPConnection::TCPConnection(int data_socket) {
+
+	this->data_socket = data_socket;
+	this->is_connected = true;
+
+}
 
 void TCPConnection::client_connect_socket() {
 	
-	if(connect(this->client_socket, (struct sockaddr *) &this->client_addr, sizeof(this->client_addr)) < 0) {
+	if(connect(this->data_socket, (struct sockaddr *) &this->client_addr, sizeof(this->client_addr)) < 0) {
 		perror("tcp-client: connect() failed");	
-		close(this->client_socket);
+		close(this->data_socket);
 		exit(1);
 	}
 };
-
-void TCPConnection::server_bind_socket() {
-
-	// allow for port reuse
-	int opt = 0;
-	setsockopt(this->connection_socket, SOL_SOCKET, SO_REUSEADDR, (char *) &opt, sizeof(int));
-
-	// bind socket
-	if((bind(this->connection_socket, (struct sockaddr *) &this->server_addr, sizeof(this->server_addr))) < 0) {
-		perror("bind() failed");
-		close(this->connection_socket);
-		exit(1);
-	}
-};
-
-void TCPConnection::server_listen_socket() {
-	
-	if(listen(this->connection_socket, 1) == -1) {
-		perror("listen() failed");
-		close(this->connection_socket);
-		exit(1);
-	}
-}
-
-void TCPConnection::server_accept_connection() {
-
-	if((this->data_socket = accept(this->connection_socket, (struct sockaddr *) &this->client_addr, &this->client_addr_size)) == -1) {
-		perror("accept() failed");
-		close(this->connection_socket);
-		exit(1);
-	}
-}
 
 void TCPConnection::start_client(char *host, char *port) {
 
@@ -91,23 +70,45 @@ void TCPConnection::start_client(char *host, char *port) {
 	bcopy(this->hp->h_addr, (char *)&this->client_addr.sin_addr, this->hp->h_length);	
 	this->client_addr.sin_port = htons(atoi(port));
 
-	open_socket(client_socket);
+	open_socket(data_socket);
 	client_connect_socket();
+
+	this->is_connected = true;
 }
 
-void TCPConnection::start_server(char *port) {
+void TCPConnection::send_message(Message message) {
 
-	// create server address struct
-	bzero((char *) &this->server_addr, sizeof(struct sockaddr_in));
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_addr.s_addr = INADDR_ANY;
-	server_addr.sin_port = htons(atoi(port));
-	this->client_addr_size = sizeof(this->client_addr);
+	// Encode the object to be sent
+	string encoded_message = message.encode();
 
-	open_socket(this->connection_socket);
-	server_bind_socket();
-	server_listen_socket();
-	server_accept_connection();
+	// Encode the newly encoded string to escape the message separation delimiter
+	string separated_message = encode_message(encoded_message);
+
+	// Send the message across the socket
+	send_message(separated_message);
+
+}
+
+void TCPConnection::send_message(string s) {
+	int len = s.length();
+	if(send(this->data_socket, s.c_str(), len, 0) == -1) {
+		fprintf(stderr, "tcp-client: send() failed");
+		close_socket();
+		exit(1);
+	}
+}
+
+
+string TCPConnection::encode_message(string message_string) {
+
+	return message_string;
+
+}
+
+void TCPConnection::close_socket() {
+
+	close(this->data_socket);
+
 }
 
 
