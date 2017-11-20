@@ -26,7 +26,6 @@ using namespace std;
 bool end_child_thread = false;
 
 void* Client::handle_unprompted_messages(void *arg) {
-/*	
 	Client *c = (Client *)arg;
 	while(!end_child_thread) {
 		if(c->tcp_connection.is_message_available()) {
@@ -38,12 +37,10 @@ void* Client::handle_unprompted_messages(void *arg) {
 			cout << "**** NEW MESSAGE: " << text << " *****************" << endl;
 		}	
 	}
-*/
 	pthread_exit(NULL);
 }
 
 Client::Client(char *h, char *port, char *username) {
-	cout << "in constructor" << endl;
 	tcp_connection = TCPConnection();
 	tcp_connection.start_client(h, port);
 	this->user_login(username);
@@ -59,7 +56,7 @@ void Client::start() {
 	printf("Welcome to the Online Chat Room!\n");
 	this->print_usage();
 
-	cout << endl << endl;
+	cout << endl;
 	cout << "> ";
 	string command;
 	while(cin >> command) { // loop until the input is finished
@@ -116,7 +113,6 @@ void Client::user_logout() {
 }
 
 void Client::user_login(char *username) {
-	cout << "in login, username: " << string(username) << endl;
 	if(!username) {
 		fprintf(stderr, "unable to log in with no username\n");
 	}
@@ -139,7 +135,6 @@ void Client::user_login(char *username) {
 			if(m.get_message_text() == "logged in") {
 				break;
 			}
-			string password;
 			cout << "Incorrect Password. Please re-enter your password: ";
 			cin >> password;
 		}
