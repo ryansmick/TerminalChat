@@ -52,6 +52,7 @@ string Message::encode() {
 
 Message& Message::decode(string encoded_message) {
 
+	cout << "ENCODED MESSAGE: " << encoded_message << endl;
 	string text = encoded_message.substr(0, encoded_message.length() - 4);
 	bool is_command = encoded_message.at(encoded_message.length() - 3) == boolean_true_encoding ? true : false;
 	bool is_prompted = encoded_message.at(encoded_message.length() - 1) == boolean_true_encoding ? true : false;

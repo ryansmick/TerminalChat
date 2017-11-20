@@ -150,8 +150,6 @@ void TCPConnection::populate_message_queue() {
 		return;
 	}
 
-	cout << "Incoming messages: " << incoming_messages << endl;
-
 	// Split messages up
 	vector<string> encoded_messages;
 	split_messages(incoming_messages, encoded_messages);
@@ -159,9 +157,9 @@ void TCPConnection::populate_message_queue() {
 	// Iterate through vector adding messages to queue
 	for(auto it = encoded_messages.begin(); it != encoded_messages.end(); it++) {
 		string message_text = *it;
-		cout << "Message text: " << message_text << endl;
 		string decoded_message = decode_message(message_text);
 		Message message = Message::decode(decoded_message);
+		cout << "Adding <" << message.get_message_text() << "> to queue" << endl;
 		this->message_queue.push(message);
 	}
 }
