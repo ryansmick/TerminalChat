@@ -27,7 +27,7 @@ class Client {
 
 	public:
 
-		Client(char *h, char *port);
+		Client(char *h, char *port, char *username);
 		
 		void start();	
 		void print_usage();

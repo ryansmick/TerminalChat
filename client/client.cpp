@@ -26,7 +26,7 @@ using namespace std;
 bool end_child_thread = false;
 
 void* Client::handle_unprompted_messages(void *arg) {
-	
+/*	
 	Client *c = (Client *)arg;
 	while(!end_child_thread) {
 		if(c->tcp_connection.is_message_available()) {
@@ -38,12 +38,15 @@ void* Client::handle_unprompted_messages(void *arg) {
 			cout << "**** NEW MESSAGE: " << text << " *****************" << endl;
 		}	
 	}
+*/
 	pthread_exit(NULL);
 }
 
-Client::Client(char *h, char *port) {
+Client::Client(char *h, char *port, char *username) {
+	cout << "in constructor" << endl;
 	tcp_connection = TCPConnection();
 	tcp_connection.start_client(h, port);
+	this->user_login(username);
 };
 
 void Client::start() {	
@@ -113,12 +116,14 @@ void Client::user_logout() {
 }
 
 void Client::user_login(char *username) {
+	cout << "in login, username: " << string(username) << endl;
 	if(!username) {
 		fprintf(stderr, "unable to log in with no username\n");
 	}
 
-	Message m = Message(string(username), false, false);
-	
+	Message m = Message(string(username), false, true);
+	this->tcp_connection.send_message(m);
+
 	m = wait_for_ack();
 	
 	string text = m.get_message_text();
@@ -142,6 +147,7 @@ void Client::user_login(char *username) {
 		string password;
 		cout << "No Account found with that username. Please create a password: ";
 		cin >> password;
+		cout << "password: " << password << endl;
 		//delete(&m);
 		m = Message(password, false, true);
 		tcp_connection.send_message(m);

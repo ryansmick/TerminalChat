@@ -7,7 +7,7 @@
 #include <queue>
 #include <vector>
 #include <fcntl.h>
-
+#include <errno.h>
 #include "tcp_connection.h"
 #include "message.h"
 
@@ -171,7 +171,7 @@ string TCPConnection::receive_from_socket() {
 	size_t in_buffer_size = 8192;
 	char in_buffer[in_buffer_size];
 	bzero(in_buffer, in_buffer_size);
-	if(read(this->data_socket, (void *) &in_buffer, in_buffer_size) == -1) {
+	if(read(this->data_socket, (void *) &in_buffer, in_buffer_size) == -1 && errno != EAGAIN) {
 		perror("read() failed");
 		exit(1);
 	}

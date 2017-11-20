@@ -4,9 +4,16 @@
 #include <fstream>
 #include <iostream>
 #include <pthread.h>
-
+#include <unordered_map>
 #include "chatserver.h"
 using namespace std;
+
+Message wait_for_ack(TCPConnection conn);
+
+struct Thread_Args {
+	TCPConnection connection;
+	unordered_map<string,string> passwords;
+};
 
 Chatserver::Chatserver(char *port) {
 
@@ -28,9 +35,16 @@ Chatserver::Chatserver(char *port) {
 void Chatserver::accept_connections() {
 
 	while(true) {
-		TCPConnection conn = this->tcp_server.accept_connection();
+		struct Thread_Args args;
+		args.connection = this->tcp_server.accept_connection();
+		args.passwords = this->passwords;
+		cout << "1 size: " << args.passwords.size() << endl;
+		for(unordered_map<string, string>::iterator it = args.passwords.begin(); it != args.passwords.end(); it++) {
+			cout << "1: first: " << it->first << ", second: " << it->second << endl;
+		}
+		//TCPConnection conn = this->tcp_server.accept_connection();
 		pthread_t thread_id;
-		if((pthread_create( &thread_id, NULL, &this->client_handler, (void*) &conn) < 0)) {
+		if((pthread_create( &thread_id, NULL, &this->client_handler, (void*) &args) < 0)) {
 			perror("Failed to create thread");
 			continue;
 		}
@@ -41,26 +55,62 @@ void Chatserver::accept_connections() {
 void *Chatserver::client_handler(void *data) {
 	
 	// Retrieve username
+	/*
 	TCPConnection *conn = (TCPConnection *) data;
 	while(!conn->is_message_available()) {}
 	Message message = conn->get_latest_message();
 	conn->pop_latest_message();
 	string username = message.get_message_text();
 	cout << username << " connected!" << endl;
-//	delete &message;
+	unordered_map<string, string>::const_iterator it = passwords.find(username);
+	if(it == passwords.end()) {
+		// Username not found
+		Message m = Message("create", false, true);
+		conn->send_message(m);
+	}
+	else {
+		// Username found
+		Message m = Message("login", false, true);
+		conn->send_message(m);
+	}
+	*/
+	
+	struct Thread_Args *args = (struct Thread_Args*)data;
+	cout << "2 size: " << args->passwords.size() << endl;
+	for(unordered_map<string, string>::iterator it = (*args).passwords.begin(); it != (*args).passwords.end(); it++) {
+		cout << "2: first: " << it->first << ", second: " << it->second << endl;
+	}
+	Message message = wait_for_ack(args->connection);
+	string username = message.get_message_text();
+	cout << username << " connected!" << endl;
 
 	// Check if user has logged in before
-//	unordered_map<string, string>::const_iterator it = passwords.find(username);
-//	if(it == passwords.end()) {
-//		// Username not found
-//		Message m = Message("create", false, true);
-//		conn->send_message(m);
-//	}
-//	else {
-//		// Username found
-//		Message m = Message("login", false, true);
-//		conn->send_message(m);
-//	}
+	unordered_map<string, string>::const_iterator it = args->passwords.find(username);
+	cout << "here" <<endl;
+	for(unordered_map<string, string>::iterator it = args->passwords.begin(); it != args->passwords.end(); ++it) {
+		cout << "first: " << it->first << ", second: " << it->second << endl;
+	}
+	if(it == args->passwords.end()) {
+		// Username not found
+		cout << "acct not found" << endl;
+		Message m = Message("create", false, true);
+		args->connection.send_message(m);
+		
+		m = wait_for_ack(args->connection);
+		string password = m.get_message_text();
+		cout << "password received: " << password << endl;
+
+		ofstream myfile;
+		myfile.open("passwords.txt", ofstream::app);
+		myfile << username << " " << password << "\n";
+		myfile.close();
+		m = Message("finished", false, true);
+	}
+	else {
+		// Username found
+		Message m = Message("login", false, true);
+		args->connection.send_message(m);
+	}
 
 	return 0;
 }
@@ -79,4 +129,23 @@ void Chatserver::split(string line, string &s1, string &s2) {
 		s1 = line.substr(0,pos);
 		s2 = line.substr(pos+1);
 	}
+}
+
+Message wait_for_ack(TCPConnection conn) {
+	cout << "waiting for ack" << endl;
+	while(1) {
+		if(conn.is_message_available()) {
+			Message m = conn.get_latest_message();
+			cout << "m: " << m.get_message_text() << endl;
+			if(m.get_is_prompted()) {
+				cout << "popping message with text: " << m.get_message_text() << endl;
+				conn.pop_latest_message();
+				if(conn.is_message_available()) {
+					Message m2 = conn.get_latest_message();
+					cout << "m2: " << m2.get_message_text() << endl;
+				}
+				return m;
+			}
+		}
+	}	
 }
