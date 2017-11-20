@@ -29,9 +29,9 @@ void* Client::handle_unprompted_messages(void *arg) {
 	Client *c = (Client *)arg;
 	while(!end_child_thread) {
 		if(c->tcp_connection.is_message_available()) {
-			Message m = c->tcp_connection.get_latest_message();
-			if(!m.get_is_prompted()) {
-				string text = m.get_message_text();
+			Message* m = c->tcp_connection.get_latest_message();
+			if(m && !m->get_is_prompted()) {
+				string text = m->get_message_text();
 				cout << "**************** NEW MESSAGE: " << text << " *****************" << endl;
 				c->tcp_connection.pop_latest_message();
 			}
@@ -190,10 +190,10 @@ void Client::user_login(char *username) {
 Message Client::wait_for_ack() {
 	while(1) {
 		if(tcp_connection.is_message_available()) {
-			Message m = tcp_connection.get_latest_message();
-			if(m.get_is_prompted()) {
+			Message* m = tcp_connection.get_latest_message();
+			if(m && m->get_is_prompted()) {
 				tcp_connection.pop_latest_message();
-				return m;
+				return *m;
 			}
 		}
 	}	

@@ -170,10 +170,10 @@ void Chatserver::split(string line, string &s1, string &s2) {
 Message Chatserver::wait_for_ack(TCPConnection conn) {
 	while(1) {
 		if(conn.is_message_available()) {
-			Message m = conn.get_latest_message();
-			if(m.get_is_prompted()) {
+			Message* m = conn.get_latest_message();
+			if(m && m->get_is_prompted()) {
 				conn.pop_latest_message();
-				return m;
+				return *m;
 			}
 		}
 	}	
@@ -182,10 +182,10 @@ Message Chatserver::wait_for_ack(TCPConnection conn) {
 Message Chatserver::wait_for_command(TCPConnection conn) {
 	while(1) {
 		if(conn.is_message_available()) {
-			Message m = conn.get_latest_message();
-			if(m.get_is_command()) {
+			Message* m = conn.get_latest_message();
+			if(m && m->get_is_command()) {
 				conn.pop_latest_message();
-				return m;
+				return *m;
 			}
 		}
 	}

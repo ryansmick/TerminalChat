@@ -205,11 +205,9 @@ bool TCPConnection::is_message_available() {
 
 }
 
-Message& TCPConnection::get_latest_message() {
+Message* TCPConnection::get_latest_message() {
 
-	populate_message_queue();
-
-	return message_queue.front();
+	return &message_queue.front();
 
 }
 

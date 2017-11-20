@@ -64,7 +64,7 @@ class TCPConnection {
 		// Public functions to send and receive data
 		void send_message(Message message);
 		bool is_message_available();
-		Message& get_latest_message();
+		Message* get_latest_message();
 		void pop_latest_message();
 
 		// Close the connection
