@@ -28,7 +28,6 @@ bool end_child_thread = false;
 void* Client::handle_unprompted_messages(void *arg) {
 	
 	Client *c = (Client *)arg;
-	printf("in a new thread\n");
 	while(!end_child_thread) {
 		if(c->tcp_connection.is_message_available()) {
 			Message m = c->tcp_connection.get_latest_message();
@@ -86,6 +85,10 @@ void Client::start() {
 };
 
 void Client::print_usage() {
+	printf("OPERATIONS:\n");
+	printf("\tP -- send a private chat message\n");
+	printf("\tB -- broadcast a chat message to all users\n");
+	printf("\tE -- exit this chat client\n");
 }
 
 void Client::broadcast_message() {
