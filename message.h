@@ -22,6 +22,7 @@ class Message {
 	public:
 
 		Message(string message_text, bool is_command, bool is_prompted);
+		Message(const Message& m);
 
 		// Encode and decode messages
 		string encode();

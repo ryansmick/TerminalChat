@@ -12,6 +12,14 @@ Message::Message(string message_text, bool is_command, bool is_prompted) {
 
 }
 
+Message::Message(const Message& m) {
+
+	this->message_text = string(m.message_text);
+	this->is_command = m.is_command;
+	this->is_prompted = m.is_prompted;
+
+}
+
 string Message::encode() {
 
 	string encoded_string = string(this->message_text);
@@ -52,7 +60,6 @@ string Message::encode() {
 
 Message& Message::decode(string encoded_message) {
 
-	cout << "ENCODED MESSAGE: " << encoded_message << endl;
 	string text = encoded_message.substr(0, encoded_message.length() - 4);
 	bool is_command = encoded_message.at(encoded_message.length() - 3) == boolean_true_encoding ? true : false;
 	bool is_prompted = encoded_message.at(encoded_message.length() - 1) == boolean_true_encoding ? true : false;

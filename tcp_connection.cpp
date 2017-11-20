@@ -159,7 +159,6 @@ void TCPConnection::populate_message_queue() {
 		string message_text = *it;
 		string decoded_message = decode_message(message_text);
 		Message message = Message::decode(decoded_message);
-		cout << "Adding <" << message.get_message_text() << "> to queue" << endl;
 		this->message_queue.push(message);
 	}
 }
