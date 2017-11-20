@@ -24,6 +24,8 @@ class Client {
 		
 		Message wait_for_ack();
 
+		string strip(string s);
+
 
 	public:
 

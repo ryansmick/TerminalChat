@@ -31,10 +31,10 @@ void* Client::handle_unprompted_messages(void *arg) {
 		if(c->tcp_connection.is_message_available()) {
 			Message m = c->tcp_connection.get_latest_message();
 			if(!m.get_is_prompted()) {
+				string text = m.get_message_text();
+				cout << "**************** NEW MESSAGE: " << text << " *****************" << endl;
 				c->tcp_connection.pop_latest_message();
 			}
-			string text = m.get_message_text();
-			cout << "**** NEW MESSAGE: " << text << " *****************" << endl;
 		}	
 	}
 	pthread_exit(NULL);
@@ -95,16 +95,22 @@ void Client::broadcast_message() {
 	Message m = Message("B", true, false);
 	tcp_connection.send_message(m);
 
+	cout << "sent B" << endl;
 	m = wait_for_ack();
+
+	string text;
+	cout << "What is the message you want to broadcast?" << endl << "\t>";
+	do {
+		getline(cin, text);
+		text = strip(text);
+	} while(text.length() == 0);
 	
-	string text = m.get_message_text();
-	if(text == "send message") {
-		string text;
-		cout << "What is the message you want to broadcast?" << endl << "\t>";
-		cin >> text;
-		m = Message(text, false, true);
-		tcp_connection.send_message(m);
-	}
+	cout << "SENDING: " << text << endl;
+	m = Message(text, false, true);
+	tcp_connection.send_message(m);
+
+	m = wait_for_ack();
+	cout << m.get_message_text() << endl;
 }
 
 void Client::private_message() {
@@ -114,12 +120,22 @@ void Client::private_message() {
 	m = wait_for_ack();
 	
 	string text = m.get_message_text();
-	if(text == "send message") {
-		string text;
-		cout << "What is the message you want to send?" << endl << "\t>";
-		cin >> text;
-		m = Message(text, false, true);
-	}
+	cout << "Online users: " << text << endl;
+
+	cout << "Which user would you like to communicate with?" << endl << "\t>";
+	getline(cin, text);
+	m = Message(text, false, true);
+
+	cout << "What would you like to say to " << text << "?" << endl << "\t>";
+	getline(cin, text);
+	Message m2 = Message(text, false, true);
+
+	tcp_connection.send_message(m);
+	tcp_connection.send_message(m2);
+
+	m = wait_for_ack();
+
+	cout << m.get_message_text() << endl;
 }
 
 void Client::user_logout() {
@@ -175,4 +191,15 @@ Message Client::wait_for_ack() {
 			}
 		}
 	}	
+}
+
+string Client::strip(string str) {
+
+	int s=str.find_first_not_of(" \t");
+	int e=str.find_last_not_of(" \t");
+
+	if (s!=-1 && e!=-1) {
+		return str.substr(s, e-s+1);
+	}
+	return "";
 }
