@@ -1,26 +1,20 @@
-// TCP server
 
+#include <cstdlib>
 #include <iostream>
 
-#include "../tcp_connection.h"
-#include "tcp_server.h"
-
+#include "chatserver.h"
 using namespace std;
 
 int main(int argc, char **argv) {
-	
-	TCPServer server = TCPServer();
-	server.start_server(argv[1]);
-	
-	TCPConnection conn = server.accept_connection();
 
-	while(true) {
-		if(conn.is_message_available()) {
-			Message m = conn.get_latest_message();
-			cout << m.get_message_text() << endl;
-			conn.pop_latest_message();
-		}
+	if(argc != 2) {
+		printf("\nError: Invalid arguments\nProper command format: ./chatserver <port>\n\n");
+		exit(1);
 	}
+	char *port = argv[1];
+
+	Chatserver server(port);
+	server.accept_connections();
 
 	return 0;
 }

@@ -1,4 +1,4 @@
-
+#include <iostream>
 #include <cstdio>
 #include <cstdlib>
 #include <netdb.h>
@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <queue>
 #include <vector>
+#include <fcntl.h>
 
 #include "tcp_connection.h"
 #include "message.h"
@@ -35,6 +36,7 @@ void TCPConnection::open_socket(int &sockfd) {
 		perror("socket() failed");
 		exit(1);
 	}
+	
 };
 
 TCPConnection::TCPConnection() {
@@ -46,6 +48,7 @@ TCPConnection::TCPConnection(int data_socket) {
 	
 	this->message_queue = queue<Message>();
 	this->data_socket = data_socket;
+	fcntl(this->data_socket, F_SETFL, O_NONBLOCK);
 	this->is_connected = true;
 
 }
@@ -76,6 +79,8 @@ void TCPConnection::start_client(char *host, char *port) {
 
 	open_socket(data_socket);
 	client_connect_socket();
+
+	fcntl(this->data_socket, F_SETFL, O_NONBLOCK);
 
 	this->is_connected = true;
 }
@@ -145,6 +150,8 @@ void TCPConnection::populate_message_queue() {
 		return;
 	}
 
+	cout << "Incoming messages: " << incoming_messages << endl;
+
 	// Split messages up
 	vector<string> encoded_messages;
 	split_messages(incoming_messages, encoded_messages);
@@ -152,6 +159,7 @@ void TCPConnection::populate_message_queue() {
 	// Iterate through vector adding messages to queue
 	for(auto it = encoded_messages.begin(); it != encoded_messages.end(); it++) {
 		string message_text = *it;
+		cout << "Message text: " << message_text << endl;
 		string decoded_message = decode_message(message_text);
 		Message message = Message::decode(decoded_message);
 		this->message_queue.push(message);
@@ -176,11 +184,18 @@ void TCPConnection::split_messages(string incoming_messages, vector<string>& mes
 	size_t i;
 	size_t start_index = 0;
 	for(i = 0; i < incoming_messages.length()-1; i++) {
-		if (incoming_messages.at(i) == message_delimiter && incoming_messages.at(i+1) != message_delimiter) {
-			messages.push_back(incoming_messages.substr(start_index, i));
-			start_index = i+1;
+		if (incoming_messages.at(i) == message_delimiter) {
+			if (incoming_messages.at(i+1) != message_delimiter) {
+				messages.push_back(incoming_messages.substr(start_index, i));
+				start_index = i+1;
+			}
+			else {
+				i++;
+			}
 		}
 	}
+
+	messages.push_back(incoming_messages.substr(start_index, incoming_messages.length()-1));
 
 }
 
@@ -189,7 +204,7 @@ bool TCPConnection::is_message_available() {
 	// Fill queue with most recent messages
 	populate_message_queue();
 
-	return message_queue.empty();
+	return !message_queue.empty();
 
 }
 
@@ -211,6 +226,6 @@ void TCPConnection::pop_latest_message() {
 
 void TCPConnection::close_socket() {
 
-	close(this->data_socket);
+		close(this->data_socket);
 
 }

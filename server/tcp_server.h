@@ -23,7 +23,7 @@ class TCPServer {
 		socklen_t client_addr_size;
 
 		// Open a socket on the server
-		void open_socket(int &sockfd);
+		void open_socket();
 
 		// Server utility functions
 		void server_bind_socket();		
