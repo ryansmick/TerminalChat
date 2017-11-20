@@ -6,6 +6,8 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <string>
+#include <queue>
+#include <vector>
 
 #include "message.h"
 
@@ -26,6 +28,9 @@ class TCPConnection {
 		struct sockaddr_in client_addr;
 		bool is_connected;
 
+		// Message queue
+		queue<Message> message_queue;
+
 		// String utility functions
 		string c_to_cpp_string(char* buf);
 		string rstrip(string str);
@@ -42,8 +47,10 @@ class TCPConnection {
 		// Send and receive utility functions
 		void send_message(string s);
 		string encode_message(string message_string);
-		//string decode_message(string encoded_string);
-		//void populate_message_queue();
+		string decode_message(string encoded_string);
+		void populate_message_queue();
+		string receive_from_socket();
+		void split_messages(string incoming_messages, vector<string>& messages);
 
 	public:
 
