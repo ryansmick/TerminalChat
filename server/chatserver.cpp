@@ -89,15 +89,11 @@ void *Chatserver::client_handler(void *data) {
 
 		// Parse command
 		string command = m.get_message_text();
-		cout << "INCOMING COMMAND: " << command << endl;
 		if(command == "B") {
 			conn->send_message(Message("send message", false, true));
-			cout << "SENT BROADCASE RESPONSE" << endl;
 			m = server->wait_for_ack(*conn);
-			cout << "SERVER WAITED FOR ACK" << endl;
 			m.set_is_prompted(false);
 			server->broadcast(m, username);
-			cout << "THE MESSAGE WAS BROADCAST" << endl;
 			conn->send_message(Message("Your message was sent to all other logged-in users.", false, true));
 		}
 		else if(command == "P") {

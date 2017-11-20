@@ -95,7 +95,6 @@ void Client::broadcast_message() {
 	Message m = Message("B", true, false);
 	tcp_connection.send_message(m);
 
-	cout << "sent B" << endl;
 	m = wait_for_ack();
 
 	string text;
@@ -105,7 +104,6 @@ void Client::broadcast_message() {
 		text = strip(text);
 	} while(text.length() == 0);
 	
-	cout << "SENDING: " << text << endl;
 	m = Message(text, false, true);
 	tcp_connection.send_message(m);
 
@@ -123,11 +121,19 @@ void Client::private_message() {
 	cout << "Online users: " << text << endl;
 
 	cout << "Which user would you like to communicate with?" << endl << "\t>";
-	getline(cin, text);
+	do {
+		getline(cin, text);
+		text = strip(text);
+	} while(text.length() == 0);
+
 	m = Message(text, false, true);
 
 	cout << "What would you like to say to " << text << "?" << endl << "\t>";
-	getline(cin, text);
+	do {
+		getline(cin, text);
+		text = strip(text);
+	} while(text.length() == 0);
+
 	Message m2 = Message(text, false, true);
 
 	tcp_connection.send_message(m);
