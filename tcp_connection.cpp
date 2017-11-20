@@ -224,3 +224,8 @@ void TCPConnection::pop_latest_message() {
 
 }
 
+void TCPConnection::close_socket() {
+
+		close(this->data_socket);
+
+}
