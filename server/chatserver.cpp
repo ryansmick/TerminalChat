@@ -73,7 +73,7 @@ void *Chatserver::client_handler(void *data) {
 		// Username found
 		Message m = Message("login", false, true);
 		conn->send_message(m);
-		m = server-> wait_for_ack(*conn);
+		m = server->wait_for_ack(*conn);
 		while(m.get_message_text() != it->second) {
 			conn->send_message(Message("login failed", false, true));
 			m = server->wait_for_ack(*conn);
@@ -83,7 +83,41 @@ void *Chatserver::client_handler(void *data) {
 		server->connections.insert(pair<string, TCPConnection>(username, *conn));
 	}
 
+	while(true) {
+		// Wait for client command
+		m = server->wait_for_command(*conn);
+
+		// Parse command
+		string command = m.get_message_text();
+		if(command == "B") {
+			conn->send_message(Message("send message", false, true));
+			m = server->wait_for_ack(*conn);
+			m.set_is_prompted(false);
+			server->broadcast(m, username);
+			conn->send_message(Message("Your message was sent to all other logged-in users.", false, true));
+		}
+		else if(command == "P") {
+		
+		}
+		else if(command == "E") {
+			conn->close_socket();
+			server->connections.erase(username);
+			return 0;
+		}
+	}
+
 	return 0;
+}
+
+void Chatserver::broadcast(Message m, string username) {
+
+	cout << "Broadcasting to:" << endl;
+	for(auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+		if(username != it->first) {
+			cout << "\t" << it->first << endl;
+			it->second.send_message(m);
+		}
+	}
 }
 
 // Remove whitespace from the end of a string
@@ -112,4 +146,16 @@ Message Chatserver::wait_for_ack(TCPConnection conn) {
 			}
 		}
 	}	
+}
+
+Message Chatserver::wait_for_command(TCPConnection conn) {
+	while(1) {
+		if(conn.is_message_available()) {
+			Message m = conn.get_latest_message();
+			if(m.get_is_command()) {
+				conn.pop_latest_message();
+				return m;
+			}
+		}
+	}
 }

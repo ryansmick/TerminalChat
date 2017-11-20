@@ -116,7 +116,7 @@ void Client::private_message() {
 	string text = m.get_message_text();
 	if(text == "send message") {
 		string text;
-		cout << "What is the message you want to broadcast?" << endl << "\t>";
+		cout << "What is the message you want to send?" << endl << "\t>";
 		cin >> text;
 		m = Message(text, false, true);
 	}

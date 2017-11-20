@@ -25,7 +25,9 @@ class Chatserver {
 
 		// Private member functions
 		static void *client_handler(void *data);
+		Message wait_for_command(TCPConnection conn);
 		Message wait_for_ack(TCPConnection conn);
+		void broadcast(Message m, string username);
 
 	public:
 
