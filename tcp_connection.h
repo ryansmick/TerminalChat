@@ -3,7 +3,6 @@
 #ifndef TCP_CONNECTION_H
 #define TCP_CONNECTION_H
 
-
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <string>
