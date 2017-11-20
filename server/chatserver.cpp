@@ -8,6 +8,11 @@
 #include "chatserver.h"
 using namespace std;
 
+typedef struct thread_data_t {
+	Chatserver *server;
+	TCPConnection *conn;
+} ThreadData;
+
 Chatserver::Chatserver(char *port) {
 
 	// Start server
@@ -28,9 +33,9 @@ Chatserver::Chatserver(char *port) {
 void Chatserver::accept_connections() {
 
 	while(true) {
-		TCPConnection conn = this->tcp_server.accept_connection();
+		ThreadData thread_data = ThreadData{this, &this->tcp_server.accept_connection()};
 		pthread_t thread_id;
-		if((pthread_create( &thread_id, NULL, &this->client_handler, (void*) &conn) < 0)) {
+		if((pthread_create( &thread_id, NULL, &Chatserver::client_handler, (void*) &thread_data) < 0)) {
 			perror("Failed to create thread");
 			continue;
 		}
@@ -41,7 +46,9 @@ void Chatserver::accept_connections() {
 void *Chatserver::client_handler(void *data) {
 	
 	// Retrieve username
-	TCPConnection *conn = (TCPConnection *) data;
+	ThreadData *thread_data = (ThreadData *) data;
+	Chatserver *server = thread_data->server;
+	TCPConnection *conn = thread_data->conn;
 	while(!conn->is_message_available()) {}
 	Message message = conn->get_latest_message();
 	conn->pop_latest_message();
@@ -50,17 +57,19 @@ void *Chatserver::client_handler(void *data) {
 //	delete &message;
 
 	// Check if user has logged in before
-//	unordered_map<string, string>::const_iterator it = passwords.find(username);
-//	if(it == passwords.end()) {
-//		// Username not found
+	unordered_map<string, string>::const_iterator it = server->passwords.find(username);
+	if(it == server->passwords.end()) {
+		// Username not found
+		cout << "Username NOT found" << endl;
 //		Message m = Message("create", false, true);
 //		conn->send_message(m);
-//	}
-//	else {
-//		// Username found
+	}
+	else {
+		// Username found
+		cout << "Username found!" << endl;
 //		Message m = Message("login", false, true);
 //		conn->send_message(m);
-//	}
+	}
 
 	return 0;
 }
