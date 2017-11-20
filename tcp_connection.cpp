@@ -111,6 +111,3 @@ void TCPConnection::close_socket() {
 
 }
 
-
-void TCPConnection::send_message(Message m) {
-}

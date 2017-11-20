@@ -9,9 +9,9 @@
 
 using namespace std;
 
-void TCPServer::open_socket(int &sockfd) {
+void TCPServer::open_socket() {
 
-	if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+	if((this->connection_socket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 		perror("socket() failed");
 		exit(1);
 	}
@@ -65,7 +65,7 @@ void TCPServer::start_server(char *port) {
 	server_addr.sin_port = htons(atoi(port));
 	this->client_addr_size = sizeof(this->client_addr);
 
-	open_socket(this->connection_socket);
+	open_socket();
 	server_bind_socket();
 	server_listen_socket();
 }

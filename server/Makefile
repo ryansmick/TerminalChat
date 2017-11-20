@@ -1,10 +1,10 @@
-all: TerminalChatServer
+all: chatserver
 
-TerminalChatServer: main.cpp tcp_server.o ../tcp_connection.o ../message.o
+chatserver: main.cpp chatserver.o tcp_server.o ../tcp_connection.o ../message.o
 	g++ -Wall -std=gnu++11 $^ -o $@
 
 *.o: *.cpp
-	g++ -Wall -std=gnu++11 -c $^
+	g++ -Wall -c -std=gnu++11 $^
 
 clean:
-	rm -rf TerminalChatServer *.o ../*.o
+	rm -rf chatserver *.o ../*.o
