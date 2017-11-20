@@ -27,7 +27,9 @@ class Chatserver {
 		static void *client_handler(void *data);
 		Message wait_for_command(TCPConnection conn);
 		Message wait_for_ack(TCPConnection conn);
+		string list_online_users();
 		void broadcast(Message m, string username);
+		bool private_message(Message m, string username);
 
 	public:
 

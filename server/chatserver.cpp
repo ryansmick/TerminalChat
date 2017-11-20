@@ -97,7 +97,18 @@ void *Chatserver::client_handler(void *data) {
 			conn->send_message(Message("Your message was sent to all other logged-in users.", false, true));
 		}
 		else if(command == "P") {
-		
+			string user_list = server->list_online_users();
+			conn->send_message(Message(user_list, false, true));
+			m = server->wait_for_ack(*conn);
+			string target = m.get_message_text();
+			m = server->wait_for_ack(*conn);
+			m.set_is_prompted(false);
+			if(server->private_message(m, target)) {
+				conn->send_message(Message("Your message was succeccfully sent to " + target + ".", false, true));
+			}
+			else {
+				conn->send_message(Message(target + " is offline.", false, true));
+			}
 		}
 		else if(command == "E") {
 			conn->close_socket();
@@ -111,13 +122,32 @@ void *Chatserver::client_handler(void *data) {
 
 void Chatserver::broadcast(Message m, string username) {
 
-	cout << "Broadcasting to:" << endl;
 	for(auto it = this->connections.begin(); it != this->connections.end(); ++it) {
 		if(username != it->first) {
-			cout << "\t" << it->first << endl;
 			it->second.send_message(m);
 		}
 	}
+}
+
+bool Chatserver::private_message(Message m, string username) {
+
+	auto it = this->connections.find(username);
+	if(it == this->connections.end()) {
+		return false;
+	}
+	else {
+		it->second.send_message(m);
+		return true;
+	}
+}
+
+string Chatserver::list_online_users() {
+
+	string user_list = "Online users:\n";
+	for(auto it = this->connections.begin(); it != this->connections.end(); ++it) {
+		user_list += ("\t" + it->first + "\n");
+	}
+	return user_list;
 }
 
 // Remove whitespace from the end of a string
