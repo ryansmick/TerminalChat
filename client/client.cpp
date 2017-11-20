@@ -99,13 +99,27 @@ void Client::broadcast_message() {
 	
 	string text = m.get_message_text();
 	if(text == "send message") {
+		string text;
+		cout << "What is the message you want to broadcast?" << endl << "\t>";
+		cin >> text;
+		m = Message(text, false, true);
+		tcp_connection.send_message(m);
 	}
-	//delete(&m);		
 }
 
 void Client::private_message() {
 	Message m = Message("P", true, false);
+	tcp_connection.send_message(m);
 
+	m = wait_for_ack();
+	
+	string text = m.get_message_text();
+	if(text == "send message") {
+		string text;
+		cout << "What is the message you want to broadcast?" << endl << "\t>";
+		cin >> text;
+		m = Message(text, false, true);
+	}
 }
 
 void Client::user_logout() {
