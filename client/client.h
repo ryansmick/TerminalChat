@@ -19,7 +19,11 @@ class Client {
 		void broadcast_message();
 		void private_message();
 		void user_logout();
+		void user_login(char *username);
 		static void *handle_unprompted_messages(void *arg);
+		
+		Message wait_for_ack();
+
 
 	public:
 
