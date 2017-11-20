@@ -107,7 +107,7 @@ void *Chatserver::client_handler(void *data) {
 			string target = m.get_message_text();
 			m = server->wait_for_ack(*conn);
 			m.set_is_prompted(false);
-			if(server->private_message(m, target)) {
+			if(server->private_message(m, username, target)) {
 				conn->send_message(Message("Your message was succeccfully sent to " + target + ".", false, true));
 			}
 			else {
@@ -133,9 +133,10 @@ void Chatserver::broadcast(Message m, string username) {
 	}
 }
 
-bool Chatserver::private_message(Message m, string username) {
+bool Chatserver::private_message(Message m, string sender, string receiver) {
 
-	auto it = this->connections.find(username);
+	m.set_message_text("(" + sender + ") " + m.get_message_text());
+	auto it = this->connections.find(receiver);
 	if(it == this->connections.end()) {
 		return false;
 	}
