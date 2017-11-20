@@ -4,6 +4,8 @@
 #include <netdb.h>
 #include <strings.h>
 #include <unistd.h>
+#include <queue>
+#include <vector>
 
 #include "tcp_connection.h"
 #include "message.h"
@@ -36,11 +38,13 @@ void TCPConnection::open_socket(int &sockfd) {
 };
 
 TCPConnection::TCPConnection() {
+	this->message_queue = queue<Message>();
 	this->is_connected = false;
 }
 
 TCPConnection::TCPConnection(int data_socket) {
-
+	
+	this->message_queue = queue<Message>();
 	this->data_socket = data_socket;
 	this->is_connected = true;
 
@@ -84,6 +88,8 @@ void TCPConnection::send_message(Message message) {
 	// Encode the newly encoded string to escape the message separation delimiter
 	string separated_message = encode_message(encoded_message);
 
+	separated_message += message_delimiter;
+
 	// Send the message across the socket
 	send_message(separated_message);
 
@@ -101,7 +107,105 @@ void TCPConnection::send_message(string s) {
 
 string TCPConnection::encode_message(string message_string) {
 
-	return message_string;
+	string encoded_string = string(message_string);
+
+	// Escape the delimiter
+	for(size_t i = 0; i < encoded_string.length(); i++) {
+		if (encoded_string.at(i) == this->message_delimiter) {
+			encoded_string.insert(i, 1, this->message_delimiter);
+			i++;
+		}
+	}
+
+	return encoded_string;
+
+}
+
+string TCPConnection::decode_message(string encoded_string) {
+
+	string text = string(encoded_string);
+
+	// Remove the extra delimiters from the string
+	for(size_t i = 0; i < text.length()-1; i++) {
+		if(text.at(i) == message_delimiter && text.at(i+1) == message_delimiter) {
+			text.erase(i+1, 1);
+		}
+	}
+
+	return text;
+
+}
+
+void TCPConnection::populate_message_queue() {
+
+	// Retrieve latest data from socket
+	string incoming_messages = receive_from_socket();
+
+	if(incoming_messages.length() <= 0) {
+		return;
+	}
+
+	// Split messages up
+	vector<string> encoded_messages;
+	split_messages(incoming_messages, encoded_messages);
+
+	// Iterate through vector adding messages to queue
+	for(auto it = encoded_messages.begin(); it != encoded_messages.end(); it++) {
+		string message_text = *it;
+		string decoded_message = decode_message(message_text);
+		Message message = Message::decode(decoded_message);
+		this->message_queue.push(message);
+	}
+}
+
+string TCPConnection::receive_from_socket() {
+
+	size_t in_buffer_size = 8192;
+	char in_buffer[in_buffer_size];
+	bzero(in_buffer, in_buffer_size);
+	if(read(this->data_socket, (void *) &in_buffer, in_buffer_size) == -1) {
+		perror("read() failed");
+		exit(1);
+	}
+	return rstrip(c_to_cpp_string(in_buffer));
+
+}
+
+void TCPConnection::split_messages(string incoming_messages, vector<string>& messages) {
+
+	size_t i;
+	size_t start_index = 0;
+	for(i = 0; i < incoming_messages.length()-1; i++) {
+		if (incoming_messages.at(i) == message_delimiter && incoming_messages.at(i+1) != message_delimiter) {
+			messages.push_back(incoming_messages.substr(start_index, i));
+			start_index = i+1;
+		}
+	}
+
+}
+
+bool TCPConnection::is_message_available() {
+
+	// Fill queue with most recent messages
+	populate_message_queue();
+
+	return message_queue.empty();
+
+}
+
+Message& TCPConnection::get_latest_message() {
+
+	populate_message_queue();
+
+	return message_queue.front();
+
+}
+
+void TCPConnection::pop_latest_message() {
+
+	populate_message_queue();
+
+	message_queue.pop();
 
 }
 
