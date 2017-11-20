@@ -23,11 +23,22 @@
 #include "../tcp_connection.h"
 using namespace std;
 
-void* Client::handle_unprompted_messages(void *arg) {
+bool end_child_thread = false;
 
-	//while(1) {
-	//}
+void* Client::handle_unprompted_messages(void *arg) {
+	
+	Client *c = (Client *)arg;
 	printf("in a new thread\n");
+	while(!end_child_thread) {
+		if(c->tcp_connection.is_message_available()) {
+			Message m = c->tcp_connection.get_latest_message();
+			if(!m.get_is_prompted()) {
+				c->tcp_connection.pop_latest_message();
+			}
+			string text = m.get_message_text();
+			cout << "**** NEW MESSAGE: " << text << " *****************" << endl;
+		}	
+	}
 	pthread_exit(NULL);
 }
 
@@ -37,7 +48,7 @@ Client::Client(char *h, char *port) {
 };
 
 void Client::start() {	
-	int ret =  pthread_create(&handle_messages_thread, NULL, &handle_unprompted_messages, NULL);
+	int ret =  pthread_create(&handle_messages_thread, NULL, &handle_unprompted_messages, (void *)this);
 	if(ret != 0) {
 		printf("Error: pthread_create() failed\n");
 		exit(EXIT_FAILURE);														                
@@ -53,6 +64,8 @@ void Client::start() {
 		if(command == "E") {
 			printf("Goodbye!\n");
 			user_logout();
+			end_child_thread = 1;
+			pthread_join(handle_messages_thread, NULL);
 			break;
 		} else if(command == "B"){
 			broadcast_message();
@@ -79,14 +92,69 @@ void Client::broadcast_message() {
 	Message m = Message("B", true, false);
 	tcp_connection.send_message(m);
 
+	m = wait_for_ack();
 	
+	string text = m.get_message_text();
+	if(text == "send message") {
+	}
+	//delete(&m);		
 }
 
 void Client::private_message() {
+	Message m = Message("P", true, false);
+
 }
 
 void Client::user_logout() {
+	Message m = Message("E", true, false);
 }
 
-void Client::user_login() {
+void Client::user_login(char *username) {
+	if(!username) {
+		fprintf(stderr, "unable to log in with no username\n");
+	}
+
+	Message m = Message(string(username), false, false);
+	
+	m = wait_for_ack();
+	
+	string text = m.get_message_text();
+	if(text == "login") {
+		string password;
+		cout << "Account found! Please enter your password: ";
+		cin >> password;
+		while(1) {
+			//delete(&m);
+			m = Message(password, false, true);
+			tcp_connection.send_message(m);
+			m = wait_for_ack();
+			if(m.get_message_text() == "logged in") {
+				break;
+			}
+			string password;
+			cout << "Incorrect Password. Please re-enter your password: ";
+			cin >> password;
+		}
+	} else if (text == "create") {
+		string password;
+		cout << "No Account found with that username. Please create a password: ";
+		cin >> password;
+		//delete(&m);
+		m = Message(password, false, true);
+		tcp_connection.send_message(m);
+		m = wait_for_ack();	
+	}
+	//delete(&m);
+}
+
+Message Client::wait_for_ack() {
+	while(1) {
+		if(tcp_connection.is_message_available()) {
+			Message m = tcp_connection.get_latest_message();
+			if(m.get_is_prompted()) {
+				tcp_connection.pop_latest_message();
+				return m;
+			}
+		}
+	}	
 }

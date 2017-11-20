@@ -110,7 +110,3 @@ void TCPConnection::close_socket() {
 	close(this->data_socket);
 
 }
-
-
-void TCPConnection::send_message(Message m) {
-}
