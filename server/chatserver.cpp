@@ -4,7 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <pthread.h>
-
+#include <unordered_map>
 #include "chatserver.h"
 using namespace std;
 
@@ -49,26 +49,38 @@ void *Chatserver::client_handler(void *data) {
 	ThreadData *thread_data = (ThreadData *) data;
 	Chatserver *server = thread_data->server;
 	TCPConnection *conn = thread_data->conn;
-	while(!conn->is_message_available()) {}
-	Message message = conn->get_latest_message();
-	conn->pop_latest_message();
-	string username = message.get_message_text();
-	cout << username << " connected!" << endl;
-//	delete &message;
-
+	Message m = server->wait_for_ack(*conn);
+	string username = m.get_message_text();
+	
 	// Check if user has logged in before
 	unordered_map<string, string>::const_iterator it = server->passwords.find(username);
 	if(it == server->passwords.end()) {
 		// Username not found
-		cout << "Username NOT found" << endl;
-//		Message m = Message("create", false, true);
-//		conn->send_message(m);
+		m = Message("create", false, true);
+		conn->send_message(m);
+		
+		m = server->wait_for_ack(*conn);
+		string password = m.get_message_text();
+
+		ofstream myfile;
+		myfile.open("passwords.txt", ofstream::app);
+		myfile << username << " " << password << "\n";
+		myfile.close();
+		m = Message("finished", false, true);
+		conn->send_message(m);
 	}
 	else {
 		// Username found
-		cout << "Username found!" << endl;
-//		Message m = Message("login", false, true);
-//		conn->send_message(m);
+		Message m = Message("login", false, true);
+		conn->send_message(m);
+		m = server-> wait_for_ack(*conn);
+		while(m.get_message_text() != it->second) {
+			conn->send_message(Message("login failed", false, true));
+			m = server->wait_for_ack(*conn);
+		}
+		m = Message("logged in", false, true);
+		conn->send_message(m);
+		server->connections.insert(pair<string, TCPConnection>(username, *conn));
 	}
 
 	return 0;
@@ -88,4 +100,16 @@ void Chatserver::split(string line, string &s1, string &s2) {
 		s1 = line.substr(0,pos);
 		s2 = line.substr(pos+1);
 	}
+}
+
+Message Chatserver::wait_for_ack(TCPConnection conn) {
+	while(1) {
+		if(conn.is_message_available()) {
+			Message m = conn.get_latest_message();
+			if(m.get_is_prompted()) {
+				conn.pop_latest_message();
+				return m;
+			}
+		}
+	}	
 }

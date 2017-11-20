@@ -15,16 +15,6 @@
 using namespace std;
 
 int main(int argc, char **argv) {
-	
-	string text = "hello ## wo#rld###";
-	cout << text << endl;
-
-	Message message = Message(text, true, false);
-	Message new_message = Message::decode(message.encode());
-	cout << new_message.get_message_text() << endl;
-	cout << new_message.get_is_command() << endl;
-	cout << new_message.get_is_prompted() << endl;
-	
 	if(argc != 4) {
 		fprintf(stderr, "usage: tcpclient server_hostname server_port username\n");
 		exit(1);
@@ -32,12 +22,12 @@ int main(int argc, char **argv) {
 
 	char *hostname = argv[1];
 	char *port = argv[2];
-	//char *username = argv[3];
+	char *username = argv[3];
 
 	char *buf = (char *)malloc(BUFF_SIZE);
 	bzero(buf,BUFF_SIZE);
 
-	Client c = Client(hostname, port);
+	Client c = Client(hostname, port, username);
 	
 	//client.connect_socket();
 	c.start();
