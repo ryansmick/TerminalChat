@@ -33,6 +33,6 @@ void *client_handler(void *data) {
 	conn->pop_latest_message();
 	string name = message.get_message_text();
 	cout << name << " connected!" << endl;
-	delete &message;
+//	delete &message;
 }
 
